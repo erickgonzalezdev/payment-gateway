@@ -25,7 +25,8 @@ export default class InitController {
     this.start = this.start.bind(this)
   }
 
-  start (app) {
+  async start (app) {
+    await this.libraries.start()
     this.routers.start(app)
   }
 }

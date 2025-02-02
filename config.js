@@ -5,7 +5,8 @@ const config = {
   port: process.env.PORT || 5001,
   passKey: process.env.PASS_KEY || 'user-password-salt-key',
   koaSessionKey: 'koa-session-secret-key',
-  env
+  env,
+  chainEnv: process.env.CHAIN_ENV || 'testnet'
 }
 
 export default config
