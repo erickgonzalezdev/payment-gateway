@@ -44,7 +44,7 @@ class Server {
     app.use(mount('/', serve(`${process.cwd()}/docs`)))
 
     this.controller = new Controller(config)
-    this.controller.start(app)
+    await this.controller.start(app)
     app.listen(this.port)
 
     this.controller.libraries.wlogger.info(`Server started on port : ${this.port}`)

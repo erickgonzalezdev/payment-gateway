@@ -3,6 +3,7 @@ import UseCases from './use-cases/index.js'
 import Libraries from './lib/index.js'
 import Middleware from './middlewares/index.js'
 import ErrorHandler from './utils/error.js'
+import TimerController from './timer-controller.js'
 
 export default class InitController {
   constructor (config = {}) {
@@ -11,7 +12,7 @@ export default class InitController {
     this.errorHandler = new ErrorHandler()
     this.config.errorHandler = this.errorHandler
 
-    this.libraries = new Libraries(config)
+    this.libraries = new Libraries(this.config)
     this.config.libraries = this.libraries
 
     this.useCases = new UseCases(this.config)
@@ -22,10 +23,14 @@ export default class InitController {
 
     this.routers = new Routers(this.config)
 
+    this.timerController = new TimerController(this.config)
+
     this.start = this.start.bind(this)
   }
 
-  start (app) {
+  async start (app) {
+    await this.libraries.start()
+    this.timerController.startTimers()
     this.routers.start(app)
   }
 }

@@ -12,6 +12,7 @@ export default class UsersController {
     this.getUser = this.getUser.bind(this)
     this.getUsers = this.getUsers.bind(this)
     this.updateUser = this.updateUser.bind(this)
+    this.getUserWallets = this.getUserWallets.bind(this)
   }
 
   /**
@@ -153,6 +154,26 @@ export default class UsersController {
       const newData = ctx.request.body
       const result = await this.useCases.users.updateUser({ existingData, newData })
       ctx.body = result
+    } catch (error) {
+      this.handleError(ctx, error)
+    }
+  }
+
+  /**
+* @api {GET} /users/wallets/:id Get User Wallets.
+* @apiPermission user
+* @apiName UserWallets
+* @apiGroup Users
+* @apiVersion 1.0.0
+*
+* @apiExample Example usage:
+* curl -H "Content-Type: application/json"  -X GET localhost:5001/users/wallets/<id>
+*/
+
+  async getUserWallets (ctx) {
+    try {
+      const wallets = await this.useCases.users.getUserWallets(ctx.params)
+      ctx.body = wallets
     } catch (error) {
       this.handleError(ctx, error)
     }

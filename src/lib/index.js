@@ -1,6 +1,7 @@
 import DbModels from './db-models/index.js'
 import Passport from './passport.js'
 import Logger from './winston-logger.js'
+import NetworksLib from './networks/index.js'
 
 class Lib {
   constructor (config = {}) {
@@ -15,6 +16,12 @@ class Lib {
 
     this.dbModels = new DbModels(this.config)
     this.passport = new Passport(this.config)
+
+    this.networks = new NetworksLib(this.config)
+  }
+
+  async start () {
+    await this.networks.start()
   }
 }
 
