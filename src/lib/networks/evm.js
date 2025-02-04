@@ -2,6 +2,8 @@ import { Wallet } from '@ethereumjs/wallet'
 import bip39 from 'bip39'
 import HDKey from 'hdkey'
 import Web3 from 'web3'
+import { ethers } from 'ethers'
+import FeeUtilLib from './fee.js'
 
 class EVMLib {
   constructor (config = {}) {
@@ -14,11 +16,15 @@ class EVMLib {
     this.HDKey = HDKey
     this.Networks = this.config.Networks
     this.decimals = this.config.decimals
+    this.ethers = ethers
+    this.FeeUtilLib = FeeUtilLib
 
     // declared on runtime
     this.web3 = null
     this.decimals = null
     this.baseHDPath = null
+    this.provider = null
+    this.feeLib = null
 
     // bind
     this.start = this.start.bind(this)
@@ -37,6 +43,9 @@ class EVMLib {
       const url = networkData[this.config.chainEnv]
       this.decimals = networkData.decimals
       this.baseHDPath = networkData.basePath
+      this.provider = new this.ethers.JsonRpcProvider(url)
+
+      this.feeLib = new this.FeeUtilLib({ provider: this.provider, chain: chainKey })
 
       // start with provided env ( mainnet or testnet )
       this.wlogger.info(`Starting ${chainKey} on enviroment ${this.config.chainEnv} : ${url}`)
@@ -126,18 +135,26 @@ class EVMLib {
 
   async send (to, value, privateKey) {
     try {
+      const { fee, gasLimit, gasPrice } = await this.feeLib.getFee({})
+      console.log('fee', fee)
+      const valueAfterFee = value - this.toBig(fee)
+      console.log('value before fee', this.toNum(value))
+      console.log('valueAfterFee', valueAfterFee)
       const sender = this.web3.eth.accounts.wallet.add(privateKey)[0]
-
       const txInput = {
         from: sender.address,
         to,
-        value
+        value: valueAfterFee,
+        gas: gasLimit, // Gas estándar para transferencias
+        gasPrice: this.toBig(gasPrice)
+
       }
 
       console.log('txinput', txInput)
       const receipt = await this.web3.eth.sendTransaction(txInput)
 
-      console.log(receipt.transactionHash)
+      // console.log(receipt.transactionHash)
+      return receipt.transactionHash
     } catch (error) {
       this.wlogger.error('Error on EVM send()')
       throw error
@@ -146,7 +163,7 @@ class EVMLib {
 
   toBig (value) {
     try {
-      return BigInt(value * (10 ** this.decimals))
+      return BigInt(Math.round(value * (10 ** this.decimals)))
     } catch (error) {
       this.wlogger.error('Error on EVM toBig()')
       throw error

@@ -20,6 +20,7 @@ class RouterHanlder {
     this.getUsers = this.getUsers.bind(this)
     this.getUser = this.getUser.bind(this)
     this.updateUser = this.updateUser.bind(this)
+    this.getUserWallets = this.getUserWallets.bind(this)
   }
 
   async start (app) {
@@ -30,6 +31,8 @@ class RouterHanlder {
     this.router.get('/', this.getUsers)
     this.router.get('/:id', this.getUser)
     this.router.put('/:id', this.updateUser)
+    this.router.get('/wallets/:id', this.getUserWallets)
+
     // this.router.delete('/:id', this.deleteUser)
 
     app.use(this.router.routes())
@@ -58,6 +61,10 @@ class RouterHanlder {
     await this.middleware.userValidators.ensureUser(ctx, next)
     await this.controller.getUser(ctx, next)
     await this.controller.updateUser(ctx, next)
+  }
+
+  async getUserWallets (ctx, next) {
+    await this.controller.getUserWallets(ctx, next)
   }
 }
 

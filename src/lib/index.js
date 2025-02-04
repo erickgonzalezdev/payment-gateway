@@ -17,11 +17,11 @@ class Lib {
     this.dbModels = new DbModels(this.config)
     this.passport = new Passport(this.config)
 
-    this.NetworksLib = new NetworksLib(this.config)
+    this.networks = new NetworksLib(this.config)
   }
 
   async start () {
-    await this.NetworksLib.start()
+    await this.networks.start()
   }
 }
 

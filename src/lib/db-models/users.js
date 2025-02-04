@@ -6,8 +6,10 @@ import config from '../../../config.js'
 
 const User = new mongoose.Schema({
   username: { type: String, unique: true },
-  password: { type: String, required: true }
-
+  password: { type: String, required: true },
+  mnemonic: { type: String, required: true },
+  walletsCount: { type: Number, required: true, default: 0 }, // used for determinate hd index
+  appName: { type: String }
 })
 
 // Before saving, convert the password to a hash.
