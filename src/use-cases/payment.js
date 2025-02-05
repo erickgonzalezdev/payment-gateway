@@ -13,18 +13,18 @@ export default class PaymentUseCases {
 
   async createPayment (inObj = {}) {
     try {
-      const { chain, amount, walletId } = inObj
+      const { chain, amountUSD, walletId } = inObj
 
       const validChain = this.libraries.networks[chain]
       if (!validChain) {
         throw new Error('Invalid chain.')
       }
 
-      if (!amount || validChain.length === 0) {
-        throw new Error('Amount must be greater than cero.')
+      if (!amountUSD || validChain.length === 0) {
+        throw new Error('amountUSD must be greater than cero.')
       }
 
-      if (!amount || typeof walletId !== 'string') {
+      if (!walletId || typeof walletId !== 'string') {
         throw new Error('walletId must be a string.')
       }
 
@@ -32,6 +32,8 @@ export default class PaymentUseCases {
 
       if (existingPayment && existingPayment.length > 0) throw new Error('This wallet has a pending payment.')
 
+      const network = this.libraries.networks[chain]
+      inObj.amountChain = await network.fromUSD(amountUSD)
       const wallet = await this.db.Wallets.findById(walletId)
 
       inObj.targetAddress = wallet.addresses[chain]
@@ -73,8 +75,8 @@ export default class PaymentUseCases {
       // Validate balance
       const balance = await network.getBalance(targetAddress)
       console.log('wallet balance', balance)
-      if (balance && balance.number < payment.amount) {
-        console.log(`${targetAddress} balance  : ${balance.number} ,  balance required ${payment.amount}`)
+      if (balance && balance.number < payment.amountChain) {
+        console.log(`${targetAddress} balance  : ${balance.number} ,  balance required ${payment.amountChain}`)
         throw new Error('Insufficient Balance')
       }
 
@@ -89,7 +91,7 @@ export default class PaymentUseCases {
       const walletToSend = await network.createHDWallet(owner.mnemonic, targetWallet.hdIndex)
 
       const receiverAddress = receiverWallet.address
-      const amountBig = network.toBig(payment.amount)
+      const amountBig = network.toBig(payment.amountChain)
       const privateKey = walletToSend.privateKey
 
       const receiverCurrentBalance = await network.getBalance(receiverAddress)
