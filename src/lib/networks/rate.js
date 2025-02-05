@@ -1,8 +1,5 @@
-import axios from 'axios'
-import { ethers } from 'ethers'
 import puppeteer from 'puppeteer'
-import fs from 'fs'
-import path from 'path'
+
 class Rate {
   constructor (config = {}) {
     this.config = config
@@ -38,7 +35,7 @@ class Rate {
       const valueStr = tableData[index + 2]
       const cleanValueStr = valueStr.replace('$', '').replace(',', '')
       const value = Number(cleanValueStr)
-      if (!value || value === NaN) throw new Error(`Value cant be handled ${value}`)
+      if (!value || isNaN(value)) throw new Error(`Value cant be handled ${value}`)
       return value
     } catch (error) {
       console.log('error', error)

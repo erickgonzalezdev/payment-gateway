@@ -189,6 +189,7 @@ class EVMLib {
       const valueUSD = usdPrice * valueCoin
       return valueUSD.toFixed(2)
     } catch (error) {
+      this.wlogger.error('Error on EVM toUSD()')
       throw error
     }
   }
@@ -199,6 +200,7 @@ class EVMLib {
       const value = valueUSD / usdPrice
       return value.toPrecision(5)
     } catch (error) {
+      this.wlogger.error('Error on EVM fromUSD()')
       throw error
     }
   }
