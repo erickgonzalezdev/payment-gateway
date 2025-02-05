@@ -7,9 +7,12 @@ import FeeUtilLib from './fee.js'
 
 class EVMLib {
   constructor (config = {}) {
+    // Injection
     this.config = config
     this.appMnemonic = config.mnemonic
     this.wlogger = config.wlogger
+    this.rate = config.rate
+
     // Encapsulate
     this.Wallet = Wallet
     this.bip39 = bip39
@@ -25,6 +28,7 @@ class EVMLib {
     this.baseHDPath = null
     this.provider = null
     this.feeLib = null
+    this.networkData = null
 
     // bind
     this.start = this.start.bind(this)
@@ -39,10 +43,10 @@ class EVMLib {
   async start (chainKey) {
     try {
       // get network data
-      const networkData = this.config.NetworksData[chainKey]
-      const url = networkData[this.config.chainEnv]
-      this.decimals = networkData.decimals
-      this.baseHDPath = networkData.basePath
+      this.networkData = this.config.NetworksData[chainKey]
+      const url = this.networkData[this.config.chainEnv]
+      this.decimals = this.networkData.decimals
+      this.baseHDPath = this.networkData.basePath
       this.provider = new this.ethers.JsonRpcProvider(url)
 
       this.feeLib = new this.FeeUtilLib({ provider: this.provider, chain: chainKey })
@@ -175,6 +179,26 @@ class EVMLib {
       return Number(value) / Number((10 ** this.decimals))
     } catch (error) {
       this.wlogger.error('Error on EVM toNum()')
+      throw error
+    }
+  }
+
+  async toUSD (valueCoin) {
+    try {
+      const usdPrice = await this.rate.getUSDPrice(this.networkData.symbol)
+      const valueUSD = usdPrice * valueCoin
+      return valueUSD.toFixed(2)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async fromUSD (valueUSD) {
+    try {
+      const usdPrice = await this.rate.getUSDPrice(this.networkData.symbol)
+      const value = valueUSD / usdPrice
+      return value.toPrecision(5)
+    } catch (error) {
       throw error
     }
   }

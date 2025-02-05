@@ -11,7 +11,7 @@ const start = async () => {
 
     const paymentObj = {
       walletId: wallet._id,
-      amount: 0.001,
+      amountUSD: 1.99,
       chain: 'eth'
     }
     const payment = await createPayment(paymentObj, user.token)

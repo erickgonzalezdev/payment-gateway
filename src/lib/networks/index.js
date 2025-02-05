@@ -1,10 +1,13 @@
 import EVMLib from './evm.js'
 import NetworksData from './networksData.js'
 import bip39 from 'bip39'
+import Rate from './rate.js'
 
 class NetworksLib {
   constructor (config = {}) {
     this.config = config
+    this.rate = new Rate(this.config)
+    this.config.rate = this.rate
     this.config.NetworksData = NetworksData
 
     this.bip39 = bip39

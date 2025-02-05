@@ -16,7 +16,6 @@ class Lib {
 
     this.dbModels = new DbModels(this.config)
     this.passport = new Passport(this.config)
-
     this.networks = new NetworksLib(this.config)
   }
 
