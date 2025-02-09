@@ -7,7 +7,7 @@ const config = {
   koaSessionKey: 'koa-session-secret-key',
   env,
   chainEnv: process.env.CHAIN_ENV || 'testnet',
-  rateURL1: process.env.RATE_URL_1
+  rateURL1: process.env.RATE_URL_1 || env === 'test' ? 'testurl' : ''
 }
 
 export default config

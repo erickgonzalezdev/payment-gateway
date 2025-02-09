@@ -9,10 +9,13 @@ export default class PaymentUseCases {
     this.createPayment = this.createPayment.bind(this)
     this.validatePayment = this.validatePayment.bind(this)
     this.handlePendingPayments = this.handlePendingPayments.bind(this)
+    this.cancelPayment = this.cancelPayment.bind(this)
+    this.getPaymentsByWallet = this.getPaymentsByWallet.bind(this)
   }
 
   async createPayment (inObj = {}) {
     try {
+      console.log('inObj', inObj)
       const { chain, amountUSD, walletId } = inObj
 
       const validChain = this.libraries.networks[chain]
@@ -42,6 +45,7 @@ export default class PaymentUseCases {
       const payment = new this.db.Payments(inObj)
 
       await payment.save()
+      console.log('payment created!', payment)
 
       return payment
     } catch (error) {
@@ -52,10 +56,11 @@ export default class PaymentUseCases {
 
   // Review and handle a provided payment.
   async validatePayment (inObj = {}) {
+    let payment
     try {
       const { paymentId } = inObj
 
-      const payment = await this.db.Payments.findById(paymentId)
+      payment = await this.db.Payments.findById(paymentId)
       if (!payment) throw new Error('payment not found!')
 
       if (payment.status === 'completed') {
@@ -108,6 +113,7 @@ export default class PaymentUseCases {
       console.log(`Payment ${payment._id} done!  ${tx}`)
       return payment
     } catch (error) {
+      await this.handleValidationErros(payment, error)
       this.wlogger.error(`Error in use-cases/validatePayment() $ ${error.message}`)
       throw error
     }
@@ -138,6 +144,53 @@ export default class PaymentUseCases {
     } catch (error) {
       this.wlogger.error(`Error in use-cases/handlePendingPayments() $ ${error}`)
       throw error
+    }
+  }
+
+  async cancelPayment ({ id, user }) {
+    try {
+      const payment = await this.db.Payments.findById(id)
+      if (!payment) throw new Error('payment not found!')
+      const wallet = await this.db.Wallets.findById(payment.walletId)
+      const owner = await this.db.Users.findById(wallet.owner)
+      console.log('owner', owner)
+      console.log('user', user)
+
+      if (owner._id.toString() !== user._id.toString()) {
+        throw new Error('Unauthorized')
+      }
+
+      if (payment.status !== 'pending') {
+        throw new Error('Payment cant be cancelled')
+      }
+
+      await this.db.Payments.findOneAndDelete(payment._id)
+      return true
+    } catch (error) {
+      this.wlogger.error(`Error in use-cases/cancelPayment() $ ${error.message}`)
+      throw error
+    }
+  }
+
+  async getPaymentsByWallet ({ id }) {
+    try {
+      const payments = await this.db.Payments.find({ walletId: id })
+
+      return payments
+    } catch (error) {
+      this.wlogger.error(`Error in use-cases/getPaymentsByWallet() $ ${error.message}`)
+      throw error
+    }
+  }
+
+  async handleValidationErros (payment = {}, error) {
+    try {
+      const { validationAttemps } = payment
+      if (!validationAttemps) return false
+      validationAttemps.push({ error: error.message })
+      await payment.save()
+    } catch (error) {
+      return false
     }
   }
 }
