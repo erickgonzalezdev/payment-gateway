@@ -11,7 +11,9 @@ const Payment = new mongoose.Schema({
   completedAt: { type: Number },
   description: { type: String },
   targetAddress: { type: String },
-  handledTx: { type: String }
+  handledTx: { type: String },
+  metadata: { type: Object, default: {} },
+  validationAttemps: { type: Array, default: [] }
 })
 
 export default mongoose.model('payment', Payment)
