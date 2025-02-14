@@ -1,17 +1,18 @@
 import { Wallet } from '@ethereumjs/wallet'
 import bip39 from 'bip39'
 import HDKey from 'hdkey'
-import Web3 from 'web3'
 import { ethers } from 'ethers'
 import FeeUtilLib from './fee.js'
+import { TronWeb } from 'tronweb'
 
-class EVMLib {
+class TronLib {
   constructor (config = {}) {
     // Injection
     this.config = config
     this.appMnemonic = config.mnemonic
     this.wlogger = config.wlogger
     this.rate = config.rate
+    this.tronKey = config.tronKey
 
     // Encapsulate
     this.Wallet = Wallet
@@ -21,6 +22,7 @@ class EVMLib {
     this.decimals = this.config.decimals
     this.ethers = ethers
     this.FeeUtilLib = FeeUtilLib
+    this.TronWeb = TronWeb
 
     // declared on runtime
     this.web3 = null
@@ -29,7 +31,6 @@ class EVMLib {
     this.provider = null
     this.feeLib = null
     this.networkData = null
-    this.chainKey = null
 
     // bind
     this.start = this.start.bind(this)
@@ -44,33 +45,39 @@ class EVMLib {
 
   async start (chainKey) {
     try {
+      if (!this.tronKey) throw new Error('Tron Api Key must be provided!')
+
       this.chainKey = chainKey
       // get network data
       this.networkData = this.config.NetworksData[chainKey]
       const url = this.networkData[this.config.chainEnv]
       this.decimals = this.networkData.decimals
       this.baseHDPath = this.networkData.basePath
-      this.provider = new this.ethers.JsonRpcProvider(url)
+
+      this.provider = new TronWeb({
+        fullHost: url,
+        headers: { 'TRON-PRO-API-KEY': this.tronKey }
+        // privateKey: wallet.privateKeyHex
+      })
 
       this.feeLib = new this.FeeUtilLib({ provider: this.provider, chain: chainKey })
 
       // start with provided env ( mainnet or testnet )
       this.wlogger.info(`Starting ${chainKey} on enviroment ${this.config.chainEnv} : ${url}`)
-      this.web3 = new Web3(url)
 
-      await this.verifyConnection() // Ensure connection
+      await this.verifyConnection()
     } catch (error) {
-      this.wlogger.error('Error on EVM start()')
+      this.wlogger.error('Error on Tron start()')
       throw error
     }
   }
 
   async verifyConnection () {
     try {
-      const block = await this.web3.eth.getBlock('latest')
+      const block = await this.provider.trx.getCurrentBlock()
       console.log(`Connected to : ${this.chainKey}`, !!block)
     } catch (error) {
-      console.error('Error on EVM connection:', error)
+      console.error('Error on tron/verifyConection:', error)
     }
   }
 
@@ -86,24 +93,23 @@ class EVMLib {
       if (hdIndex) {
         hdPath = `${this.baseHDPath}/${hdIndex}`
       }
-      console.log('path', hdPath)
       const addrNode = root.derive(hdPath)
 
       const privateKey = this.Wallet.fromPrivateKey(addrNode.privateKey).getPrivateKeyString() // addrNode.privateKey.toString('hex')
       const publicKey = this.Wallet.fromPrivateKey(addrNode.privateKey).getPublicKeyString()// addrNode.publicKey.toString('hex')
-      const derivateAddr = this.Wallet.fromPrivateKey(addrNode.privateKey).getChecksumAddressString()
-
+      // const derivateAddr = this.Wallet.fromPrivateKey(addrNode.privateKey).getChecksumAddressString()
+      const keyHex = addrNode.privateKey.toString('hex')
       const wallet = {
-        address: derivateAddr,
+        address: this.TronWeb.address.fromPrivateKey(keyHex),
         privateKey,
-        privateKeyHex: addrNode.privateKey.toString('hex'),
+        privateKeyHex: keyHex,
         publicKey,
         hdIndex: hdIndex || null
       }
 
       return wallet
     } catch (error) {
-      this.wlogger.error('Error on EVM createHDWallet()')
+      this.wlogger.error('Error on Tron createHDWallet()')
       throw error
     }
   }
@@ -121,64 +127,55 @@ class EVMLib {
 
       const privateKey = this.Wallet.fromPrivateKey(addrNode.privateKey).getPrivateKeyString() // addrNode.privateKey.toString('hex')
       const publicKey = this.Wallet.fromPrivateKey(addrNode.privateKey).getPublicKeyString()// addrNode.publicKey.toString('hex')
-      const derivateAddr = this.Wallet.fromPrivateKey(addrNode.privateKey).getChecksumAddressString()
+      // const derivateAddr = this.Wallet.fromPrivateKey(addrNode.privateKey).getChecksumAddressString()
 
+      const keyHex = addrNode.privateKey.toString('hex')
       const wallet = {
-        mnemonic,
-        address: derivateAddr,
+        address: this.TronWeb.address.fromPrivateKey(keyHex),
         privateKey,
-        privateKeyHex: addrNode.privateKey.toString('hex'),
+        privateKeyHex: keyHex,
         publicKey,
         hdIndex: 0
       }
 
       return wallet
     } catch (error) {
-      this.wlogger.error('Error on EVM createWallet()')
+      this.wlogger.error('Error on Tron createWallet()')
       throw error
     }
   }
 
   async getBalance (addr) {
     try {
-      const balance = await this.web3.eth.getBalance(addr)
+      const balance = await this.provider.trx.getBalance(addr)
       return {
         big: balance,
         number: Number(balance) / Number((10 ** this.decimals))
       }
     } catch (error) {
-      this.wlogger.error('Error on EVM getBalance()')
+      this.wlogger.error('Error on Tron getBalance()')
       throw error
     }
   }
 
   async send (to, value, privateKey) {
     try {
-      const { fee, gasLimit, gasPrice } = await this.feeLib.getFee({})
-      console.log('fee', fee)
-      console.log('num fee', this.toNum(fee))
-      const valueAfterFee = value - this.toBig(fee)
-      console.log('value before fee', this.toNum(value))
-      console.log('valueAfterFee', this.toNum(valueAfterFee))
-      const sender = this.web3.eth.accounts.wallet.add(privateKey)[0]
+      const fee = await this.feeLib.getTronFee({ privateKey })
 
-      console.log('spent amount :', valueAfterFee + gasLimit * gasPrice)
       const txInput = {
-        from: sender.address,
         to,
-        value: valueAfterFee,
-        gasLimit, // Gas estándar para transferencias
-        gasPrice
-
+        value: value - fee,
+        privateKey
       }
+      console.log(txInput, txInput)
+      const receipt = await this.provider.trx.send(txInput.to, txInput.value, txInput.privateKey)
+      console.log('receipt', receipt)
 
-      console.log('txinput', txInput)
-      const receipt = await this.web3.eth.sendTransaction(txInput)
-
+      if (!receipt.result) throw new Error('Transaction Error')
       // console.log(receipt.transactionHash)
-      return receipt.transactionHash
+      return receipt.transaction.txID
     } catch (error) {
-      this.wlogger.error('Error on EVM send()')
+      this.wlogger.error('Error on Tron send()')
       throw error
     }
   }
@@ -224,4 +221,4 @@ class EVMLib {
   }
 }
 
-export default EVMLib
+export default TronLib

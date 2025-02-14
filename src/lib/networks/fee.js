@@ -11,6 +11,8 @@ class FeeUtilLib {
 
     this.getFee = this.getFee.bind(this)
     this.getEVMFee = this.getEVMFee.bind(this)
+    this.getTronFee = this.getTronFee.bind(this)
+    this.getOptimismFee = this.getOptimismFee.bind(this)
   }
 
   async getFee (input = {}) {
@@ -20,21 +22,41 @@ class FeeUtilLib {
     if (this.chain === 'avax') {
       return await this.getEVMFee(input)
     }
+    if (this.chain === 'trx') {
+      return await this.getTronFee(input)
+    }
 
     return false
   }
 
   async getEVMFee () {
     const block = await this.provider.getBlock('latest')
-    const gasPrice = ethers.formatUnits(block.baseFeePerGas, 'ether') // Gas Price manual (25 Gwei)
-    const gasLimit = 21000 // Para una transacción simple de transferencia
+    console.log('block', block)
+    let gasPrice = block.baseFeePerGas // Gas Price manual (25 Gwei)
+    console.log('gasPrice', gasPrice)
+    if (gasPrice < 1000000000n) gasPrice = 1000000000n
+    console.log('gasPrice', gasPrice)
 
-    const fee = gasPrice * gasLimit
+    const gasLimit = 21000n // Para una transacción simple de transferencia
+    console.log('gasLimit', gasLimit)
+
+    const _fee = gasPrice * gasLimit
+    const fee = _fee * 2n // aditional
+    console.log('fee', fee)
+    console.log('ethers fee ', ethers.formatUnits(fee, 'ether'))
     return {
       gasPrice,
       gasLimit,
-      fee
+      fee: ethers.formatUnits(fee, 'ether')
     }
+  }
+
+  async getTronFee (inObj = {}) {
+    const { privateKey } = inObj
+    const from = await this.provider.address.fromPrivateKey(privateKey)
+    const bw = await this.provider.trx.getBandwidth(from)
+    if (bw >= 300) return 0
+    return 300000
   }
 }
 
