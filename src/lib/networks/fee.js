@@ -12,7 +12,6 @@ class FeeUtilLib {
     this.getFee = this.getFee.bind(this)
     this.getEVMFee = this.getEVMFee.bind(this)
     this.getTronFee = this.getTronFee.bind(this)
-    this.getOptimismFee = this.getOptimismFee.bind(this)
   }
 
   async getFee (input = {}) {
