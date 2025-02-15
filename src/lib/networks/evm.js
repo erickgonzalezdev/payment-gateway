@@ -96,7 +96,7 @@ class EVMLib {
       const wallet = {
         address: derivateAddr,
         privateKey,
-        privateKeyHex: addrNode.privateKey.toString('hex'),
+        //     privateKeyHex: addrNode.privateKey.toString('hex'),
         publicKey,
         hdIndex: hdIndex || null
       }
@@ -127,7 +127,7 @@ class EVMLib {
         mnemonic,
         address: derivateAddr,
         privateKey,
-        privateKeyHex: addrNode.privateKey.toString('hex'),
+        //  privateKeyHex: addrNode.privateKey.toString('hex'),
         publicKey,
         hdIndex: 0
       }

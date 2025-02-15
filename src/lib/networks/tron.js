@@ -95,14 +95,13 @@ class TronLib {
       }
       const addrNode = root.derive(hdPath)
 
-      const privateKey = this.Wallet.fromPrivateKey(addrNode.privateKey).getPrivateKeyString() // addrNode.privateKey.toString('hex')
+      // const privateKey = this.Wallet.fromPrivateKey(addrNode.privateKey).getPrivateKeyString() // addrNode.privateKey.toString('hex')
       const publicKey = this.Wallet.fromPrivateKey(addrNode.privateKey).getPublicKeyString()// addrNode.publicKey.toString('hex')
       // const derivateAddr = this.Wallet.fromPrivateKey(addrNode.privateKey).getChecksumAddressString()
       const keyHex = addrNode.privateKey.toString('hex')
       const wallet = {
         address: this.TronWeb.address.fromPrivateKey(keyHex),
-        privateKey,
-        privateKeyHex: keyHex,
+        privateKey: keyHex,
         publicKey,
         hdIndex: hdIndex || null
       }
@@ -125,15 +124,14 @@ class TronLib {
       const hdPath = this.baseHDPath
       const addrNode = root.derive(hdPath)
 
-      const privateKey = this.Wallet.fromPrivateKey(addrNode.privateKey).getPrivateKeyString() // addrNode.privateKey.toString('hex')
+      // const privateKey = this.Wallet.fromPrivateKey(addrNode.privateKey).getPrivateKeyString() // addrNode.privateKey.toString('hex')
       const publicKey = this.Wallet.fromPrivateKey(addrNode.privateKey).getPublicKeyString()// addrNode.publicKey.toString('hex')
       // const derivateAddr = this.Wallet.fromPrivateKey(addrNode.privateKey).getChecksumAddressString()
 
       const keyHex = addrNode.privateKey.toString('hex')
       const wallet = {
         address: this.TronWeb.address.fromPrivateKey(keyHex),
-        privateKey,
-        privateKeyHex: keyHex,
+        privateKey: keyHex,
         publicKey,
         hdIndex: 0
       }
@@ -160,21 +158,31 @@ class TronLib {
 
   async send (to, value, privateKey) {
     try {
-      const fee = await this.feeLib.getTronFee({ privateKey })
+      console.log('send to', to)
+      const { fee } = await this.feeLib.getTronFee2({ privateKey, to, amount: value })
+      console.log('fee', this.toBig(fee))
 
+      const toSend = value - this.toBig(fee)
+      console.log('toSend', this.toNum(toSend))
       const txInput = {
         to,
-        value: value - fee,
+        value: toSend,
         privateKey
       }
-      console.log(txInput, txInput)
+
+      console.log('txInput', txInput)
       const receipt = await this.provider.trx.send(txInput.to, txInput.value, txInput.privateKey)
       console.log('receipt', receipt)
 
-      if (!receipt.result) throw new Error('Transaction Error')
+      if (!receipt.result) {
+        let errMsg = 'Transaction Error'
+        if (receipt.message) errMsg = Buffer.from(receipt.message, 'hex').toString()
+        throw new Error(errMsg)
+      }
       // console.log(receipt.transactionHash)
       return receipt.transaction.txID
     } catch (error) {
+      console.log('error.message', error.message)
       this.wlogger.error('Error on Tron send()')
       throw error
     }
