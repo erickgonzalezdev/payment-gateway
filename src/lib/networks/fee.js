@@ -50,12 +50,50 @@ class FeeUtilLib {
     }
   }
 
-  async getTronFee (inObj = {}) {
+  /*   async getTronFee (inObj = {}) {
     const { privateKey } = inObj
     const from = await this.provider.address.fromPrivateKey(privateKey)
     const bw = await this.provider.trx.getBandwidth(from)
-    if (bw >= 300) return 0
-    return 300000
+    const bwPrice = await this.provider.trx.getBandwidthPrices()
+    console.log('bwPrice', bwPrice)
+
+    console.log('bw', bw)
+    const feeNum = 300 * 0.0001
+    return feeNum
+  } */
+
+  async getTronFee (inObj = {}) {
+    const DATA_HEX_PROTOBUF_EXTRA = 2 // Add PROTBUF Overhead
+    const MAX_RESULT_SIZE_IN_TX = 64 // Add fixe sized overhead for Transaction Data
+    const A_SIGNATURE = 67
+
+    const { to, amount, privateKey } = inObj
+    console.log('privateKey', privateKey)
+    const from = await this.provider.address.fromPrivateKey(privateKey)
+    console.log('from', from)
+    const transaction = await this.provider.transactionBuilder.sendTrx(to, amount, from)
+    console.log('transaction', transaction)
+    const rawDataLengthInHex = transaction.raw_data_hex.length
+
+    const rawDataLengthInBytes = rawDataLengthInHex / 2
+
+    const bandwidthConsumption = rawDataLengthInBytes +
+      DATA_HEX_PROTOBUF_EXTRA +
+      MAX_RESULT_SIZE_IN_TX +
+      A_SIGNATURE
+    console.log(`Bandwidth cost: ${bandwidthConsumption}`)
+
+    const currentBandwith = await this.provider.trx.getBandwidth(from)
+    console.log('currentBW', currentBandwith)
+
+    const bwPrice = await this.provider.trx.getBandwidthPrices()
+    console.log('bwPrice', bwPrice)
+
+    return {
+      fee: 0.0011 * bandwidthConsumption,
+      bandwidthConsumption,
+      from
+    }
   }
 }
 

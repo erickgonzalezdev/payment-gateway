@@ -22,6 +22,7 @@ class NetworksLib {
     // Bind
     this.start = this.start.bind(this)
     this.getNewMnemonic = this.getNewMnemonic.bind(this)
+    this.decodeHex = this.decodeHex.bind(this)
   }
 
   async start () {
@@ -60,7 +61,15 @@ class NetworksLib {
 
       return wallets
     } catch (error) {
-      console.log('error on createMultiHDWallets()')
+
+    }
+  }
+
+  async decodeHex (hexStr) {
+    try {
+      return Buffer.from(hexStr, 'hex').toString()
+    } catch (error) {
+      console.log('error on decodeHex()')
       throw error
     }
   }
