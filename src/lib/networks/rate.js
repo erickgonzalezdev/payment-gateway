@@ -1,3 +1,8 @@
+/**
+ * Puppeter handler.
+ * On Vps is recommended to install chrome  before use puppeter.
+ *
+ */
 import puppeteer from 'puppeteer'
 
 class Rate {
@@ -13,7 +18,7 @@ class Rate {
   async getUSDPrice (key) {
     try {
       // Launch the browser and open a new blank page
-      const browser = await puppeteer.launch({ headless: true })
+      const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] })
       const page = await browser.newPage()
       const url = this.url1
 
