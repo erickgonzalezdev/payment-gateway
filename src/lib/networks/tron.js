@@ -159,7 +159,7 @@ class TronLib {
   async send (to, value, privateKey) {
     try {
       console.log('send to', to)
-      const { fee } = await this.feeLib.getTronFee2({ privateKey, to, amount: value })
+      const { fee } = await this.feeLib.getTronFee({ privateKey, to, amount: value })
       console.log('fee', this.toBig(fee))
 
       const toSend = value - this.toBig(fee)
