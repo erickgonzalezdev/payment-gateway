@@ -9,6 +9,7 @@ class Rate {
   constructor (config = {}) {
     this.config = config
     this.url1 = config.rateURL1
+    this.puppeteer = puppeteer
 
     if (!this.url1) throw new Error('Rate class cant be instantiate , rate url must be provided!')
 
@@ -17,8 +18,9 @@ class Rate {
 
   async getUSDPrice (key) {
     try {
+      if (!key) throw new Error('chain key must be provided')
       // Launch the browser and open a new blank page
-      const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] })
+      const browser = await this.puppeteer.launch({ headless: true, args: ['--no-sandbox'] })
       const page = await browser.newPage()
       const url = this.url1
 
@@ -35,9 +37,9 @@ class Rate {
           return td.innerText
         })
       )
-
       const index = tableData.findIndex((val) => { return val === key.toUpperCase() })
       const valueStr = tableData[index + 2]
+      console.log('valueStr', valueStr)
       const cleanValueStr = valueStr.replace('$', '').replace(',', '')
       const value = Number(cleanValueStr)
       if (!value || isNaN(value)) throw new Error(`Value cant be handled ${value}`)
