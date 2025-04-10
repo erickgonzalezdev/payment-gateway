@@ -137,10 +137,12 @@ export default class UsersUseCases {
         const provider = this.libraries.networks[chain]
         const address = multiWallet[chain].address
         const balance = await provider.getBalance(address)
+        const rate = await this.libraries.networks[chain].rate.getUSDPrice(chain)
         wallets[chain] = {
           address,
           publicKey: multiWallet[chain].publicKey,
-          balance: balance.number
+          balance: balance.number,
+          balanceUSD: balance.number * rate
         }
       }
       return wallets
