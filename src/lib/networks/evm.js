@@ -44,9 +44,11 @@ class EVMLib {
 
   async start (chainKey) {
     try {
+      if (!chainKey) throw new Error('chainKey must be provided when start EVM!')
       this.chainKey = chainKey
       // get network data
       this.networkData = this.config.NetworksData[chainKey]
+      if (!this.networkData) throw new Error(`Network data not found for chainKey: ${chainKey}`)
       const url = this.networkData[this.config.chainEnv]
       this.decimals = this.networkData.decimals
       this.baseHDPath = this.networkData.basePath
@@ -59,6 +61,7 @@ class EVMLib {
       this.web3 = new Web3(url)
 
       await this.verifyConnection() // Ensure connection
+      return true
     } catch (error) {
       this.wlogger.error('Error on EVM start()')
       throw error
@@ -69,13 +72,16 @@ class EVMLib {
     try {
       const block = await this.web3.eth.getBlock('latest')
       console.log(`Connected to : ${this.chainKey}`, !!block)
+      return true
     } catch (error) {
       console.error('Error on EVM connection:', error)
+      throw error
     }
   }
 
   async createHDWallet (mnemonic, hdIndex) {
     try {
+      console.log('createHDWallet', mnemonic, hdIndex)
       if (!mnemonic) throw new Error('mnemonic must be provided when create a new hd wallet!')
       // TODO: validate if hdIndex is currently used by another user.
       const seed = await this.bip39.mnemonicToSeed(mnemonic) // creates seed buffer
@@ -94,6 +100,7 @@ class EVMLib {
       const derivateAddr = this.Wallet.fromPrivateKey(addrNode.privateKey).getChecksumAddressString()
 
       const wallet = {
+        mnemonic,
         address: derivateAddr,
         privateKey,
         //     privateKeyHex: addrNode.privateKey.toString('hex'),
@@ -103,6 +110,7 @@ class EVMLib {
 
       return wallet
     } catch (error) {
+      console.error('Error on EVM createHDWallet()', error)
       this.wlogger.error('Error on EVM createHDWallet()')
       throw error
     }
@@ -141,6 +149,7 @@ class EVMLib {
 
   async getBalance (addr) {
     try {
+      if (!addr) throw new Error('Address must be provided when getting balance')
       const balance = await this.web3.eth.getBalance(addr)
       return {
         big: balance,
@@ -154,9 +163,12 @@ class EVMLib {
 
   async send (to, value, privateKey) {
     try {
+      if (!to) throw new Error('Address must be provided when sending')
+      if (!value) throw new Error('Value must be provided when sending')
+      if (!privateKey) throw new Error('Private key must be provided when sending')
       const { fee, gasLimit, gasPrice } = await this.feeLib.getFee({})
+
       console.log('fee', fee)
-      console.log('num fee', this.toNum(fee))
       const valueAfterFee = value - this.toBig(fee)
       console.log('value before fee', this.toNum(value))
       console.log('valueAfterFee', this.toNum(valueAfterFee))
@@ -185,6 +197,9 @@ class EVMLib {
 
   toBig (value) {
     try {
+      if (typeof value !== 'number') {
+        throw new Error('Value must be a number when converting to BigInt')
+      }
       return BigInt(Math.round(value * (10 ** this.decimals)))
     } catch (error) {
       this.wlogger.error('Error on EVM toBig()')
@@ -194,6 +209,9 @@ class EVMLib {
 
   toNum (value) {
     try {
+      if (typeof value !== 'bigint') {
+        throw new Error('Value must be a BigInt when converting to number')
+      }
       return Number(value) / Number((10 ** this.decimals))
     } catch (error) {
       this.wlogger.error('Error on EVM toNum()')

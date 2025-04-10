@@ -40,6 +40,7 @@ class NetworksLib {
 
     /*     const tempBalance = await this.op.getBalance('0xd32585CE60815654C50CAf350e18de8096061e63')
     console.log('testBalance', tempBalance) */
+    return true
   }
 
   async getNewMnemonic () {
@@ -61,15 +62,18 @@ class NetworksLib {
 
       return wallets
     } catch (error) {
-
+      console.log('error on createMultiHDWallets()', error)
+      throw error
     }
   }
 
   async decodeHex (hexStr) {
     try {
-      return Buffer.from(hexStr, 'hex').toString()
+      const decodedStr = Buffer.from(hexStr, 'hex').toString()
+      console.log('decodedStr', decodedStr)
+      return decodedStr
     } catch (error) {
-      console.log('error on decodeHex()')
+      console.log('error on decodeHex()', error)
       throw error
     }
   }

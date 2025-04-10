@@ -46,15 +46,16 @@ class TronLib {
   async start (chainKey) {
     try {
       if (!this.tronKey) throw new Error('Tron Api Key must be provided!')
-
+      if (!chainKey) throw new Error('chainKey must be provided when start tron!')
       this.chainKey = chainKey
       // get network data
       this.networkData = this.config.NetworksData[chainKey]
+      if (!this.networkData) throw new Error('Network data not found for chainKey')
       const url = this.networkData[this.config.chainEnv]
       this.decimals = this.networkData.decimals
       this.baseHDPath = this.networkData.basePath
 
-      this.provider = new TronWeb({
+      this.provider = new this.TronWeb({
         fullHost: url,
         headers: { 'TRON-PRO-API-KEY': this.tronKey }
         // privateKey: wallet.privateKeyHex
@@ -66,6 +67,7 @@ class TronLib {
       this.wlogger.info(`Starting ${chainKey} on enviroment ${this.config.chainEnv} : ${url}`)
 
       await this.verifyConnection()
+      return true
     } catch (error) {
       this.wlogger.error('Error on Tron start()')
       throw error
@@ -76,8 +78,10 @@ class TronLib {
     try {
       const block = await this.provider.trx.getCurrentBlock()
       console.log(`Connected to : ${this.chainKey}`, !!block)
+      return true
     } catch (error) {
       console.error('Error on tron/verifyConection:', error)
+      throw error
     }
   }
 
@@ -94,20 +98,22 @@ class TronLib {
         hdPath = `${this.baseHDPath}/${hdIndex}`
       }
       const addrNode = root.derive(hdPath)
-
+      console.log('this.wallet', this.Wallet.fromPrivateKey)
       // const privateKey = this.Wallet.fromPrivateKey(addrNode.privateKey).getPrivateKeyString() // addrNode.privateKey.toString('hex')
       const publicKey = this.Wallet.fromPrivateKey(addrNode.privateKey).getPublicKeyString()// addrNode.publicKey.toString('hex')
       // const derivateAddr = this.Wallet.fromPrivateKey(addrNode.privateKey).getChecksumAddressString()
       const keyHex = addrNode.privateKey.toString('hex')
       const wallet = {
-        address: this.TronWeb.address.fromPrivateKey(keyHex),
+        address: this.provider.address.fromPrivateKey(keyHex),
         privateKey: keyHex,
         publicKey,
-        hdIndex: hdIndex || null
+        hdIndex: hdIndex || null,
+        mnemonic
       }
 
       return wallet
     } catch (error) {
+      console.log('error', error)
       this.wlogger.error('Error on Tron createHDWallet()')
       throw error
     }
@@ -129,11 +135,13 @@ class TronLib {
       // const derivateAddr = this.Wallet.fromPrivateKey(addrNode.privateKey).getChecksumAddressString()
 
       const keyHex = addrNode.privateKey.toString('hex')
+
       const wallet = {
-        address: this.TronWeb.address.fromPrivateKey(keyHex),
+        address: this.provider.address.fromPrivateKey(keyHex),
         privateKey: keyHex,
         publicKey,
-        hdIndex: 0
+        hdIndex: 0,
+        mnemonic
       }
 
       return wallet
@@ -145,6 +153,7 @@ class TronLib {
 
   async getBalance (addr) {
     try {
+      if (!addr) throw new Error('Address must be provided when getting balance')
       const balance = await this.provider.trx.getBalance(addr)
       return {
         big: balance,
@@ -158,8 +167,11 @@ class TronLib {
 
   async send (to, value, privateKey) {
     try {
+      if (!to) throw new Error('Address must be provided when sending')
+      if (!value) throw new Error('Value must be provided when sending')
+      if (!privateKey) throw new Error('Private key must be provided when sending')
       console.log('send to', to)
-      const { fee } = await this.feeLib.getTronFee({ privateKey, to, amount: value })
+      const { fee } = await this.feeLib.getFee({ privateKey, to, amount: value })
       console.log('fee', this.toBig(fee))
 
       const toSend = value - this.toBig(fee)
@@ -190,6 +202,9 @@ class TronLib {
 
   toBig (value) {
     try {
+      if (typeof value !== 'number') {
+        throw new Error('Value must be a number when converting to BigInt')
+      }
       return BigInt(Math.round(value * (10 ** this.decimals)))
     } catch (error) {
       this.wlogger.error('Error on EVM toBig()')
@@ -199,6 +214,9 @@ class TronLib {
 
   toNum (value) {
     try {
+      if (typeof value !== 'bigint') {
+        throw new Error('Value must be a BigInt when converting to number')
+      }
       return Number(value) / Number((10 ** this.decimals))
     } catch (error) {
       this.wlogger.error('Error on EVM toNum()')

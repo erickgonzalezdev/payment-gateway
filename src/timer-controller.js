@@ -16,7 +16,7 @@ export default class TimerController {
     this.handlePendingPaymentsPeriod = 35000
 
     this.startTimers = this.startTimers.bind(this)
-    this.handlePendingPayments = this.handlePendingPayments.bind(this)
+    // this.handlePendingPayments = this.handlePendingPayments.bind(this)
   }
 
   startTimers () {
@@ -32,7 +32,7 @@ export default class TimerController {
     clearInterval(this.handleUnpinedTimer)
   }
  */
-  // Review al payments with status "pending"
+/*   // Review al payments with status "pending"
   async handlePendingPayments () {
     try {
       // Stop interval
@@ -52,5 +52,5 @@ export default class TimerController {
       this.handlePendingPaymentsTimer = this.setInterval(this.handlePendingPayments, this.handlePendingPaymentsPeriod)
       return false
     }
-  }
+  } */
 }
