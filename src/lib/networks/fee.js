@@ -12,6 +12,7 @@ class FeeUtilLib {
     this.getFee = this.getFee.bind(this)
     this.getEVMFee = this.getEVMFee.bind(this)
     this.getTronFee = this.getTronFee.bind(this)
+    this.getBchFee = this.getBchFee.bind(this)
   }
 
   async getFee (input = {}) {
@@ -25,6 +26,10 @@ class FeeUtilLib {
     }
     if (this.chain === 'trx') {
       const res = await this.getTronFee(input)
+      return res
+    }
+    if (this.chain === 'bch') {
+      const res = await this.getBchFee(input)
       return res
     }
 
@@ -127,6 +132,18 @@ class FeeUtilLib {
       }
     } catch (error) {
       console.error('Error getting Tron fee', error)
+      throw error
+    }
+  }
+
+  async getBchFee (inObj = {}) {
+    try {
+      const psfFee = 2000
+      const minerFee = 1000
+      const fee = psfFee + minerFee
+      return fee
+    } catch (error) {
+      console.error('Error getting BCH fee', error)
       throw error
     }
   }

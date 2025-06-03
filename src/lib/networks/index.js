@@ -3,7 +3,7 @@ import NetworksData from './networksData.js'
 import bip39 from 'bip39'
 import Rate from './rate.js'
 import TronLib from './tron.js'
-
+import BchLib from './bch.js'
 class NetworksLib {
   constructor (config = {}) {
     this.config = config
@@ -18,6 +18,7 @@ class NetworksLib {
     this.avax = new EVMLib(this.config)
     // this.op = new EVMLib(this.config)
     this.trx = new TronLib(this.config)
+    this.bch = new BchLib(this.config)
 
     // Bind
     this.start = this.start.bind(this)
@@ -32,11 +33,11 @@ class NetworksLib {
     // Avalanche
     await this.avax.start('avax')
 
-    /*    // Optimism
-    await this.op.start('op') */
-
     // tron
     await this.trx.start('trx')
+
+    // bch
+    await this.bch.start('bch')
 
     /*     const tempBalance = await this.op.getBalance('0xd32585CE60815654C50CAf350e18de8096061e63')
     console.log('testBalance', tempBalance) */
@@ -55,11 +56,11 @@ class NetworksLib {
       const ethWallet = await this.eth.createHDWallet(mnemonic, hdIndex)
       const avaxWallet = await this.avax.createHDWallet(mnemonic, hdIndex)
       const trxWallet = await this.trx.createHDWallet(mnemonic, hdIndex)
-
+      const bchWallet = await this.bch.createHDWallet(mnemonic, hdIndex)
       wallets.eth = ethWallet
       wallets.avax = avaxWallet
       wallets.trx = trxWallet
-
+      wallets.bch = bchWallet
       return wallets
     } catch (error) {
       console.log('error on createMultiHDWallets()', error)
