@@ -129,7 +129,7 @@ export default class UsersUseCases {
 
       const wallets = {}
       const multiWallet = await this.libraries.networks.createMultiHDWallets(user.mnemonic)
-
+      console.log('multiWallet', multiWallet)
       const keys = Object.keys(multiWallet)
 
       for (let i = 0; i < keys.length; i++) {
@@ -147,7 +147,7 @@ export default class UsersUseCases {
       }
       return wallets
     } catch (error) {
-      this.wlogger.error(`Error in use-cases/createWallet() $ ${error.message}`)
+      this.wlogger.error(`Error in use-cases/getUserWallets() $ ${error.message}`)
       throw error
     }
   }

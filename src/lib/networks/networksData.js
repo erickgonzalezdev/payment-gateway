@@ -40,7 +40,14 @@ const NetworksData = {
     basePath: 'm/44\'/60\'/0\'/0/0',
     name: 'Optimism',
     symbol: 'op'
-
+  },
+  bch: {
+    testnet: 'https://dev-consumer.psfoundation.infoh',
+    mainnet: 'https://dev-consumer.psfoundation.info',
+    decimals: 8,
+    basePath: 'm/44\'/245\'/0\'/0/0',
+    name: 'Bitcoin Cash',
+    symbol: 'bch'
   }
 }
 
