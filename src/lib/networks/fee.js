@@ -16,10 +16,6 @@ class FeeUtilLib {
   }
 
   async getFee (input = {}) {
-    if (this.chain === 'eth') {
-      const res = await this.getEVMFee(input)
-      return res
-    }
     if (this.chain === 'avax') {
       const res = await this.getEVMFee(input)
       return res
@@ -32,48 +28,43 @@ class FeeUtilLib {
       const res = await this.getBchFee(input)
       return res
     }
+    if (this.chain === 'eth') {
+      const res = await this.getEVMFee(input)
+      return res
+    }
 
     return false
   }
 
-  async getEVMFee () {
+  async getEVMFee (input = {}) {
     try {
-      const block = await this.provider.getBlock('latest')
-      console.log('block', block)
-      let gasPrice = block.baseFeePerGas // Gas Price manual (25 Gwei)
-      console.log('gasPrice', gasPrice)
-      if (gasPrice < 1000000000n) gasPrice = 1000000000n
-      console.log('gasPrice', gasPrice)
+      const { from, to } = input
 
-      const gasLimit = 21000n // Para una transacción simple de transferencia
-      console.log('gasLimit', gasLimit)
+      const provider = this.provider
 
-      const _fee = gasPrice * gasLimit
-      const fee = _fee * 2n // aditional
-      console.log('fee', fee)
-      console.log('ethers fee ', ethers.formatUnits(fee, 'ether'))
+      const feeData = await provider.getFeeData()
+      console.log('feeData', feeData)
+      const gasPrice = feeData.gasPrice ?? 1000000n
+
+      // Estimar gas base
+      const estimatedGas = await provider.estimateGas({
+        from,
+        to,
+        value: 0n
+      })
+
+      const fee = estimatedGas * gasPrice
+
       return {
+        gasLimit: estimatedGas,
         gasPrice,
-        gasLimit,
-        fee: ethers.formatUnits(fee, 'ether')
+        fee
       }
     } catch (error) {
       console.error('Error getting EVM fee', error)
       throw error
     }
   }
-
-  /*   async getTronFee (inObj = {}) {
-    const { privateKey } = inObj
-    const from = await this.provider.address.fromPrivateKey(privateKey)
-    const bw = await this.provider.trx.getBandwidth(from)
-    const bwPrice = await this.provider.trx.getBandwidthPrices()
-    console.log('bwPrice', bwPrice)
-
-    console.log('bw', bw)
-    const feeNum = 300 * 0.0001
-    return feeNum
-  } */
 
   async getTronFee (inObj = {}) {
     try {

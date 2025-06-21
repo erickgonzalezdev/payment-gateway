@@ -1,6 +1,7 @@
 import BchWallet from 'minimal-slp-wallet'
 import bip39 from 'bip39'
 import FeeUtilLib from './fee.js'
+import axios from 'axios'
 
 class BCH {
   constructor (config = {}) {
@@ -52,16 +53,11 @@ class BCH {
 
   async verifyConnection () {
     try {
-      const wallet = new this.BchWallet(undefined, {
-        interface: 'consumer-api',
-        restURL: this.networkData.network,
-        hdPath: this.baseHDPath
-      })
-
-      this.consumerWallet = wallet
-      this.bchjs = wallet.bchjs
-      const block = await wallet.bchjs.Blockchain.getBlockchainInfo()
-      console.log(`Connected to : ${this.chainKey}`, !!block)
+      const result = await axios.get(`${this.url}bch`)
+      if (!result.status === 200) {
+        console.log(`Error Connection to : ${this.chainKey}`)
+      }
+      console.log(`Connected to : ${this.chainKey}`, !!result.data)
       return true
     } catch (error) {
       console.error('Error on BCH connection:', error)

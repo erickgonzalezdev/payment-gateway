@@ -166,15 +166,21 @@ class EVMLib {
       if (!to) throw new Error('Address must be provided when sending')
       if (!value) throw new Error('Value must be provided when sending')
       if (!privateKey) throw new Error('Private key must be provided when sending')
-      const { fee, gasLimit, gasPrice } = await this.feeLib.getFee({})
-
-      console.log('fee', fee)
-      const valueAfterFee = value - this.toBig(fee)
-      console.log('value before fee', this.toNum(value))
-      console.log('valueAfterFee', this.toNum(valueAfterFee))
       const sender = this.web3.eth.accounts.wallet.add(privateKey)[0]
 
-      console.log('spent amount :', valueAfterFee + gasLimit * gasPrice)
+      const balance = await this.provider.getBalance(sender.address)
+      console.log('balance', balance)
+
+      const { gasLimit, gasPrice, fee } = await this.feeLib.getFee({ from: sender.address, to, value })
+      console.log('balance', balance)
+      console.log('fee', fee)
+      const valueAfterFee = balance - fee
+
+      console.log('fee', fee)
+      console.log('valueAfterFee to send ', valueAfterFee)
+
+      if (valueAfterFee < 0) throw new Error('Insufficient balance')
+
       const txInput = {
         from: sender.address,
         to,
@@ -190,6 +196,7 @@ class EVMLib {
       // console.log(receipt.transactionHash)
       return receipt.transactionHash
     } catch (error) {
+      console.log('error', error)
       this.wlogger.error('Error on EVM send()')
       throw error
     }

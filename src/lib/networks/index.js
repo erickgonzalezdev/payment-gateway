@@ -27,8 +27,8 @@ class NetworksLib {
   }
 
   async start () {
-    // Ethereum
-    await this.eth.start('eth')
+    // bch
+    await this.bch.start('bch')
 
     // Avalanche
     await this.avax.start('avax')
@@ -36,11 +36,8 @@ class NetworksLib {
     // tron
     await this.trx.start('trx')
 
-    // bch
-    await this.bch.start('bch')
+    await this.eth.start('eth')
 
-    /*     const tempBalance = await this.op.getBalance('0xd32585CE60815654C50CAf350e18de8096061e63')
-    console.log('testBalance', tempBalance) */
     return true
   }
 
@@ -57,10 +54,13 @@ class NetworksLib {
       const avaxWallet = await this.avax.createHDWallet(mnemonic, hdIndex)
       const trxWallet = await this.trx.createHDWallet(mnemonic, hdIndex)
       const bchWallet = await this.bch.createHDWallet(mnemonic, hdIndex)
+
       wallets.eth = ethWallet
       wallets.avax = avaxWallet
       wallets.trx = trxWallet
       wallets.bch = bchWallet
+
+      console.log('wallets', wallets)
       return wallets
     } catch (error) {
       console.log('error on createMultiHDWallets()', error)
