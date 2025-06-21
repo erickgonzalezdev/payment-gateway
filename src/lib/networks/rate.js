@@ -35,7 +35,7 @@ class Rate {
         const scrollContainer = document.querySelector('div.scroll-wrapper') || document.scrollingElement
         for (let i = 0; i < 10; i++) {
           scrollContainer.scrollBy(0, 500)
-          await this.sleep(500) // wait 500ms between scrolls
+          await new Promise(resolve => setTimeout(resolve, 500))// wait 500ms between scrolls
         }
       })
 
@@ -51,9 +51,14 @@ class Rate {
         })
       )
 
+      console.log('tableData', tableData)
+
       const index = tableData.findIndex((val) => { return val === key.toUpperCase() })
       console.log('index', index)
-      const valueStr = tableData[index + 1]
+      let valueStr = tableData[index + 1]
+      if (valueStr === tableData[index]) {
+        valueStr = tableData[index + 2]
+      }
       console.log('valueStr', valueStr)
       const cleanValueStr = valueStr.replace('$', '').replace(',', '')
       const value = Number(cleanValueStr)
