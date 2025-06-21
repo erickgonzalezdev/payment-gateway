@@ -10,7 +10,7 @@ const Payment = new mongoose.Schema({
   amountUSD: { type: Number, required: true },
   completedAt: { type: Number },
   description: { type: String },
-  targetAddress: { type: String },
+  targetAddress: { type: String, required: true },
   handledTx: { type: String },
   metadata: { type: Object, default: {} },
   validationAttemps: { type: Array, default: [] }
