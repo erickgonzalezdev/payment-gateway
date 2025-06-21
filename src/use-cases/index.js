@@ -8,6 +8,7 @@ export default class UseCases {
 
     this.users = new UsersUseCases(config)
     this.wallets = new WalletUseCases(config)
+    config.wallets = this.wallets
     this.payments = new PaymentUseCases(config)
   }
 }

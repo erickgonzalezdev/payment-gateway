@@ -11,6 +11,7 @@ export default class PaymentUseCases {
     this.handlePendingPayments = this.handlePendingPayments.bind(this)
     this.cancelPayment = this.cancelPayment.bind(this)
     this.getPaymentsByWallet = this.getPaymentsByWallet.bind(this)
+    this.walletsUseCases = config.wallets
   }
 
   async createPayment (inObj = {}) {
@@ -35,6 +36,7 @@ export default class PaymentUseCases {
 
       if (existingPayment && existingPayment.length > 0) throw new Error('This wallet has a pending payment.')
 
+      await this.walletsUseCases.updateWalletAddresses({ walletId })
       const network = this.libraries.networks[chain]
       inObj.amountChain = await network.fromUSD(amountUSD)
       const wallet = await this.db.Wallets.findById(walletId)
@@ -49,6 +51,7 @@ export default class PaymentUseCases {
 
       return payment
     } catch (error) {
+      console.log('createPayment error', error)
       this.wlogger.error(`Error in use-cases/createPayment() $ ${error.message}`)
       throw error
     }

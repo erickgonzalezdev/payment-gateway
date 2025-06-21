@@ -32,6 +32,14 @@ const NetworksData = {
     basePath: 'm/44\'/60\'/0\'/0/0',
     name: 'Arbitrum One',
     symbol: 'eth'
+  },
+  bnb: {
+    testnet: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
+    mainnet: 'https://bsc-dataseed.binance.org',
+    decimals: 18,
+    basePath: 'm/44\'/60\'/0\'/0/0',
+    name: 'Binance Smart Chain',
+    symbol: 'bnb'
   }
 }
 
