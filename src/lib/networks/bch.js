@@ -41,6 +41,12 @@ class BCH {
 
       this.feeLib = new this.FeeUtilLib({ chain: chainKey })
 
+      const walletOptions = {
+        interface: 'consumer-api',
+        restURL: this.networkData.network,
+      }
+      const wallet = new this.BchWallet(null, walletOptions)
+      this.bchjs = wallet.bchjs
       // start with provided env ( mainnet or testnet )
       this.wlogger.info(`Starting ${chainKey} on enviroment ${this.config.chainEnv} : ${this.url}`)
 
