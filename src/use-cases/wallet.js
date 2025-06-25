@@ -61,6 +61,7 @@ export default class WalletUseCases {
       }
 
       const wallet = await this.db.Wallets.findById(walletId)
+      if (!wallet) throw new Error('wallet not found!')
 
       const user = await this.db.Users.findById(wallet.owner)
 

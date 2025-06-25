@@ -43,7 +43,7 @@ class BCH {
 
       const walletOptions = {
         interface: 'consumer-api',
-        restURL: this.networkData.network,
+        restURL: this.networkData.network
       }
       const wallet = new this.BchWallet(null, walletOptions)
       this.bchjs = wallet.bchjs

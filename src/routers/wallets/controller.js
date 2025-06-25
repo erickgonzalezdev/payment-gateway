@@ -8,6 +8,7 @@ export default class WalletsController {
 
     // Bind function to this class.
     this.createWallet = this.createWallet.bind(this)
+    this.getWallet = this.getWallet.bind(this)
   }
 
   /**
@@ -29,6 +30,16 @@ export default class WalletsController {
       ctx.body = {
         wallet
       }
+    } catch (error) {
+      this.handleError(ctx, error)
+    }
+  }
+
+  async getWallet (ctx) {
+    try {
+      const { id } = ctx.params
+      const user = await this.useCases.wallets.updateWalletAddresses({ walletId: id })
+      ctx.body = user
     } catch (error) {
       this.handleError(ctx, error)
     }
